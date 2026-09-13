@@ -29,10 +29,10 @@ env:
   DEFCONFIG_ORIGIN_IMAGE: ""
   DEFCONFIG_FROM_BOOT: false
 
-  KERNELSU_SOURCE : ""
-  KERNELSU_BRANCH : ""
+  KERNELSU_SOURCE : "https://github.com/ReSukiSU/ReSukiSU.git"
+  KERNELSU_BRANCH : "v4.2.0-rc1"
 
-  KERNELSU_AUTO_GET : "true"
+  KERNELSU_AUTO_GET : "false"
   KERNELSU_AUTO_FORK : "resukisu"
 
   SUSFS_ENABLE : true
@@ -117,15 +117,20 @@ jobs:
       - name: 🪛 Extra Kernel Options
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-          sed -i 's/CONFIG_LOCALVERSION="-Paradigm"/CONFIG_LOCALVERSION="-HaoticKernel"/g' arch/arm64/configs/sdmmagpie_defconfig
-          echo "[+] Kernel name has been updated to -HaoticKernel-ReSukiSU"
+          sed -i 's/SUBLEVEL = .*/SUBLEVEL = 186/' Makefile
+          sed -i 's/CONFIG_LOCALVERSION="-Paradigm"/CONFIG_LOCALVERSION="-RTdev"/g' arch/arm64/configs/sdmmagpie_defconfig
+          echo "[+] Kernel version set to 4.14.186-RTdev"
           sed -i -e '/CONFIG_DEBUG_KERNEL/d' -e '/CONFIG_KALLSYMS/d' -e '/CONFIG_KALLSYMS_ALL/d' arch/arm64/configs/sdmmagpie_defconfig
           cat <<EOF >> arch/arm64/configs/sdmmagpie_defconfig
+          CONFIG_MODULES=y
+          CONFIG_MODULE_UNLOAD=y
+          CONFIG_MODULE_FORCE_LOAD=y
+          CONFIG_MODVERSIONS=n
           CONFIG_DEBUG_KERNEL=y
           CONFIG_KALLSYMS=y
           CONFIG_KALLSYMS_ALL=y
           EOF
-          echo "[+] Fixed KPM feature"
+          echo "[+] RT-dev module configs added"
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
