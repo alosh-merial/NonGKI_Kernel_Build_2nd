@@ -29,10 +29,10 @@ env:
   DEFCONFIG_ORIGIN_IMAGE: ""
   DEFCONFIG_FROM_BOOT: false
 
-  KERNELSU_SOURCE : "https://github.com/ReSukiSU/ReSukiSU.git"
-  KERNELSU_BRANCH : "v4.2.0-rc1"
+  KERNELSU_SOURCE : ""
+  KERNELSU_BRANCH : ""
 
-  KERNELSU_AUTO_GET : "false"
+  KERNELSU_AUTO_GET : "true"
   KERNELSU_AUTO_FORK : "resukisu"
 
   SUSFS_ENABLE : true
@@ -117,9 +117,20 @@ jobs:
       - name: 🪛 Extra Kernel Options
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
+          # 1. Lock ReSukiSU to tested stable commit (v4.2.0-rc1 / 35119)
+          if [ -d "KernelSU" ]; then
+            cd KernelSU
+            git checkout f1dd81dc || git checkout v4.2.0-rc1 || true
+            cd ..
+            echo "[+] ReSukiSU locked to stable release (no bootloop)"
+          fi
+
+          # 2. Force version to 4.14.186 for RT-dev driver compatibility
           sed -i 's/SUBLEVEL = .*/SUBLEVEL = 186/' Makefile
           sed -i 's/CONFIG_LOCALVERSION="-Paradigm"/CONFIG_LOCALVERSION="-RTdev"/g' arch/arm64/configs/sdmmagpie_defconfig
           echo "[+] Kernel version set to 4.14.186-RTdev"
+
+          # 3. Enable forced module loading for RT-dev driver
           sed -i -e '/CONFIG_DEBUG_KERNEL/d' -e '/CONFIG_KALLSYMS/d' -e '/CONFIG_KALLSYMS_ALL/d' arch/arm64/configs/sdmmagpie_defconfig
           cat <<EOF >> arch/arm64/configs/sdmmagpie_defconfig
           CONFIG_MODULES=y
