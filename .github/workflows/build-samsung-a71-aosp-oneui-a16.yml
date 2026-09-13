@@ -117,18 +117,14 @@ jobs:
       - name: 🪛 Extra Kernel Options
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-          # 1. Lock ReSukiSU to tested stable commit (v4.2.0-rc1 / 35119)
-          if [ -d "KernelSU" ]; then
-            cd KernelSU
-            git checkout f1dd81dc || git checkout v4.2.0-rc1 || true
-            cd ..
-            echo "[+] ReSukiSU locked to stable release (no bootloop)"
-          fi
-
-          # 2. Force version to 4.14.186 for RT-dev driver compatibility
+          # 1. Force version to 4.14.186 for RT-dev driver compatibility
           sed -i 's/SUBLEVEL = .*/SUBLEVEL = 186/' Makefile
           sed -i 's/CONFIG_LOCALVERSION="-Paradigm"/CONFIG_LOCALVERSION="-RTdev"/g' arch/arm64/configs/sdmmagpie_defconfig
           echo "[+] Kernel version set to 4.14.186-RTdev"
+
+          # 2. Disable WireGuard to eliminate the compat.h redefinition error
+          sed -i -e '/CONFIG_WIREGUARD/d' arch/arm64/configs/sdmmagpie_defconfig
+          echo "# CONFIG_WIREGUARD is not set" >> arch/arm64/configs/sdmmagpie_defconfig
 
           # 3. Enable forced module loading for RT-dev driver
           sed -i -e '/CONFIG_DEBUG_KERNEL/d' -e '/CONFIG_KALLSYMS/d' -e '/CONFIG_KALLSYMS_ALL/d' arch/arm64/configs/sdmmagpie_defconfig
